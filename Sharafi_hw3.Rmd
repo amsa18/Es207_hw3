@@ -1,0 +1,272 @@
+---
+title: "Homework III, ES207"
+author: Amir Sharafi 
+date: 02/11/2020
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Functions
+
+```{r}
+
+normalize <- function(x) { 
+ z=x
+ if(min(x)<max(x)){ 
+  z=(x - min(x)) / (max(x) - min(x))
+ }
+ return(z)
+} 
+```
+
+## Question 4a
+
+
+Part one) Check the type of  distribution of chla.The blue line is the log-normal distribution based on the mean and standard deviation of the data. 
+
+```{r include=FALSE}
+library(tidyverse)
+library(lattice)
+# read the data and call it to the software
+LakeErie1 <-  read_csv("~/Desktop/ES207/HW/es207_hw3/data/eesR/R/Data/LakeErie1.csv",
+                           col_names = TRUE, 
+                           na = c("NA", "n/p", "n/a")
+                )
+LakeErie2 <-  read_csv("~/Desktop/ES207/HW/es207_hw3/data/eesR/R/Data/LakeErie2.csv")
+```
+
+```{r}
+chla <- na.omit(LakeErie1$chla)  #delete the 'NA' raw
+#  Normalizing the data 
+Norm_chla <- normalize(chla) # Data frame can not be normalized
+Norm_chla<- as.data.frame(Norm_chla)
+ggplot(Norm_chla, aes(Norm_chla)) +
+geom_histogram(na.rm = T,binwidth =0.01)+
+   stat_function(fun = dnorm, , args = list(mean = mean(Norm_chla$Norm_chla), sd = sd(Norm_chla$Norm_chla)), colour = "blue") +
+  stat_density(geom = "line", colour = "red")+
+labs(title = "Histogram of chla") +
+labs(x = "Concentration of chla ", y = "Count")
+
+
+```
+
+Then transform it by log.( I could not scale lines in ggplot)
+
+```{r}
+chla <- na.omit(LakeErie1$chla)  #delete the 'NA' raw
+#  Normalizing the data 
+Norm_chla <- normalize(chla) # Data frame can not be normalized
+Norm_chla<- as.data.frame(Norm_chla)
+ggplot(log(Norm_chla), aes(Norm_chla)) +
+geom_histogram(na.rm = T,binwidth =0.1)+
+   stat_function(fun = dnorm, , args = list(mean = mean(Norm_chla$Norm_chla), sd = sd(Norm_chla$Norm_chla)), colour = "blue") +
+  stat_density(geom = "line", colour = "red")+
+labs(title = "Histogram of chla") +
+labs(x = "Concentration of chla ", y = "Count")
+
+```
+
+ 
+The distribution shown in above figures apparently asymmetric, atypical of an environmental  concentration variable.So, according to the transformed normalize curve in the second figure, it is not normalized. 
+ Part Two) now do the same procedure for TP distribution data. First call the data and make simple histogram. 
+```{r}
+# Make a histogram from chla data
+TP <- na.omit(LakeErie1$TP)  #delete the 'NA' raw
+#  Normalizing the data 
+bw = .01
+Norm_TP <- normalize(TP) # Data frame can not be normalized
+Norm_TP<- as.data.frame(Norm_TP)
+
+ggplot(Norm_TP, aes(Norm_TP)) +
+geom_histogram(na.rm = T,binwidth =bw)+
+   stat_function(fun = dnorm, args = list(mean = mean(Norm_TP$Norm_TP), sd = sd(Norm_TP$Norm_TP)), colour = "Blue") +
+   stat_density(geom = "line", colour = "red")+
+  labs(title = "Histogram of TP") +
+labs(x = "Concentration of TP ", y = "Count")
+
+```
+Then check the type of  distribution of TP.The blue line is the normal distribution line.
+
+```{r}
+TP <- na.omit(LakeErie1$TP)  #delete the 'NA' raw
+#  Normalizing the data 
+bw = .1
+Norm_TP <- normalize(TP) # Data frame can not be normalized
+Norm_TP<- as.data.frame(Norm_TP)
+
+ggplot(log(Norm_TP), aes(Norm_TP)) +
+geom_histogram(na.rm = T,binwidth =bw)+
+   stat_function(fun = dnorm, args = list(mean = mean(Norm_TP$Norm_TP), sd = sd(Norm_TP$Norm_TP)), colour = "Blue") +
+   stat_density(geom = "line", colour = "red")+
+  labs(title = "Histogram of TP") +
+labs(x = "Concentration of TP ", y = "Count")
+```
+ 
+The distribution shown in above figures apparently asymmetric, atypical of an environmental  concentration variable.So, according to the transformed normalize curve in the second figure, it is not normalized. 
+## Question 4b
+Using qqmath to plot chla regrads to the Year
+
+```{r}
+LakeErie10 <- LakeErie1[which(LakeErie1$Year==2013),]
+qqmath(~log(LakeErie10$chla)|"2013", data=LakeErie10, aspect="xy",
+       panel=function(x, ...){
+         panel.qqmathline(x, ...)
+         panel.qqmath(x, ...)
+       }, xlab="Q_Q norm", ylab="Log chla")
+
+
+```
+According to the figure, it is obvious,in Outliers, there are problems. And just for one year, the 'chla' was collected. 
+
+And the same for TP
+```{r}
+
+qqmath(~log(TP)|Year, data=LakeErie1, aspect="xy",
+       panel=function(x, ...){
+         panel.qqmathline(x, ...)
+         panel.qqmath(x, ...)
+         
+       }, xlab="Q_Q norm", ylab="Log TP")
+
+
+```
+
+For TP concentration,  data which was collected in recent years have a better situation.i do not know if they have changed the method of measuring or not. 
+
+## Question 5
+
+```{r}
+
+NOAA <-LakeErie2[which(LakeErie2$INSTITUTION=="NOAA" ),]#assign teh data
+ODNR <-LakeErie2[which(LakeErie2$INSTITUTION=="ODNR" ),] #assign teh data
+Toledo <-LakeErie2[which(LakeErie2$INSTITUTION=="Toledo" ),]#assign teh data
+NOAA <- na.omit(NOAA$TP)  #delete the 'NA' raw
+ODNR <- na.omit(ODNR$TP)  #delete the 'NA' raw
+Toledo <- na.omit(Toledo$TP)  #delete the 'NA' raw
+
+```
+## Question 5a
+Book method
+```{r}
+x.data <- NOAA
+y.data <- ODNR
+# create the qqplot
+qqplot(x.data, y.data, xlim=range(c(x.data,y.data)),
+       ylim=range(c(x.data,y.data)), xlab="NOAA", ylab="ODNR")
+#draw the line
+abline(0,1, col=gray(0.5))
+abline(2,1, col=gray(0.5))
+```
+
+In comparing with figure 3.9 of the book, it is more multiplicative; however, the situation is better the sample fo the book. 
+
+Your method in the lecture ( I could not find that how use two variables in one qeom_qq)
+
+```{r}
+TP.two.NO <- LakeErie2 %>% 
+  filter(INSTITUTION == "NOAA" |INSTITUTION == "ODNR")
+ggplot(TP.two.NO, mapping = aes(sample = `TP`, col = INSTITUTION)) +
+  geom_qq(na.rm = T) + geom_qq_line(na.rm = T)
+
+```
+Same conclusion Calculate the standard deviation
+```{r}
+SD_NOAA <- sd(NOAA)
+SD_ODNR <- sd(ODNR)
+SD_Toledo <- sd(Toledo)
+print(paste("Standard deviation of NORR=",SD_NOAA, "and for ODNR=",SD_ODNR,"and for Toledo=",SD_Toledo ))
+```
+
+## Question 5b
+In ODNR, they are not always measuring the TP, and sometimes the numbers are so large, and over the range, So maybe the concentration of  TP is not an essential variable for them (I know the funded by NOAA), and the biggest problem of their data is outliers. I do not know it is because of the location of sampling or not. 
+
+
+## Question 5c
+
+```{r}
+x.data <- NOAA
+y.data <- Toledo
+# create the qqplot
+qqplot(x.data, y.data, xlim=range(c(x.data,y.data)),
+       ylim=range(c(x.data,y.data)), xlab="NOAA", ylab="Toledo")
+#draw the line
+abline(0,1, col=gray(0.5))
+abline(2,1, col=gray(0.5))
+```
+
+```{r}
+x.data <- ODNR
+y.data <- Toledo
+# create the qqplot
+qqplot(x.data, y.data, xlim=range(c(x.data,y.data)),
+       ylim=range(c(x.data,y.data)), xlab="ODNR", ylab="Toledo")
+#draw the line
+abline(0,1, col=gray(0.5))
+abline(2,1, col=gray(0.5))
+```
+
+
+```{r}
+
+TP.three <- LakeErie2 %>% 
+  filter(INSTITUTION == "NOAA" |INSTITUTION == "ODNR"|INSTITUTION == "Toledo") # filter them in different levels for plotting
+ggplot(TP.three, mapping = aes(sample = `TP`, col = INSTITUTION)) +
+  geom_qq(na.rm = T) + geom_qq_line(na.rm = T)
+
+```
+The ODNR and Toledo are more near each other, according to the Q-Q_plot, but the standard deviation of NOAA is near Toledo. I think if we omit older collected data of NOAA, we will get a better result in comparing.
+## Question 7
+
+```{r}
+#make variables
+WindSpeed <- equal.count(airquality$Wind, 3, 0.25)
+Temperature <- equal.count(airquality$Temp, 3, 0.25)
+SolarR <- equal.count(airquality$Solar.R, 3, 0.25)
+
+```
+
+
+Conditional plot to examine the dependency of the ozone concentration
+temperature relationship on wind speed and solar radiation,
+```{r}
+print(
+  xyplot(sqrt(Ozone) ~ Temp|WindSpeed*SolarR,# Write the conditional statement
+         data=airquality,
+         panel=function(x,y,...){
+           panel.grid()
+          #linear regression
+          panel.lmline(x, y, col="red",...)
+           panel.xyplot(x, y, col=1, cex=0.5, ...)
+         },
+         ylab=list(label="Sqrt Ozone", cex=0.6),# Write the labes
+         xlab=list(label="Temperature", cex=0.6),
+         scales=list(x=list(alternating=c(1, 2, 1))),
+         par.strip.text=list(cex=0.4), aspect=1,
+         par.settings=list(axis.text=list(cex=0.4)))
+)
+
+```
+
+Than the
+ozone concentration{wind speed relationship on solar radiation and temperature
+```{r}
+print(
+  xyplot(sqrt(Ozone) ~ Wind|SolarR*Temperature,# Write the conditional statement 
+         data=airquality,
+         panel=function(x,y,...){
+           panel.grid()
+            #linear regression
+           panel.lmline(x, y, col="blue",...)
+           panel.xyplot(x, y, col=1, cex=0.5, ...)
+         },
+         # Write the labes
+         ylab=list(label="Sqrt Ozone", cex=0.6),
+         xlab=list(label="Wind Speed", cex=0.6),
+         scales=list(x=list(alternating=c(1, 2, 1))),
+         par.strip.text=list(cex=0.4), aspect=1,
+         par.settings=list(axis.text=list(cex=0.4)))
+)
+```
+
